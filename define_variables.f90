@@ -43,7 +43,12 @@ integer xbot,xtop,ybot,ytop
 real    cells,xfrac,yfrac
 real,external:: zcart
 real,dimension(2):: xcor,ycor
-     
+      
+if(ifuelin.eq.1.and.itrees.gt.0.and.ilitter.eq.2.and.igrass.gt.0) then
+  print*,'WARNING: Reading in fuels only and using DUET - setting grass = 0!!!'
+  igrass = 0
+endif
+
 ! Executable Code
 ntreefueltypes = istem*2+tfuelbins
 nfuel = infuel+ngrass+ntspecies*ntreefueltypes
@@ -195,6 +200,7 @@ allocate(tsizescale(ntspecies*ntreefueltypes,nx,ny,nz)); tsizescale(:,:,:,:)=0.0
 allocate(tmoist(ntspecies*ntreefueltypes,nx,ny,nz)); tmoist(:,:,:,:)=0.0
 allocate(tfueldepth(ntspecies*ntreefueltypes,nx,ny)); tfueldepth(:,:,:)=0.0
 
+command = 'cd DUET; make;  cd ..; ./duet.exe'
 
 !-----------------------------------------------------------------
 ! Groundfuel variables unique to the ground fuels baseline
@@ -291,6 +297,7 @@ subroutine define_duet_variables
 ! Variables unique to the duet
 !-----------------------------------------------------------------
 use grid_variables, only : nx,ny,nz
+use infile_variables, only : infuel
 use baseline_variables, only : ntspecies,tfuelbins
 use duet_variables, only : windprofile,winddatafile,StepsPerYear, &
   YearsSinceBurn,uavg,vavg,VAR,ustd,vstd,Umean,Vmean,Uvar,Vvar,vterminal, &
@@ -302,7 +309,7 @@ implicit none
 
 ! Local Variables
 integer :: yt,ift,s,low,high,loc
-integer :: fuelTotal
+integer :: specTotal
 real :: fuelMass,dragslope,dragb,a,monstep
 real,dimension(6) :: temp_array 
 
@@ -389,10 +396,10 @@ print*,'vvar = ',VAR(:,2)
 print*,'Each column is a year'
 print*,'!----!----!----!----!----!----!----!----!----!----!----!' 
 
-fuelTotal=ntspecies*tfuelbins
-allocate(fuelSA(fuelTotal),leafdropfreq(fuelTotal),decay(fuelTotal), &
-droptime(fuelTotal),vterminal(fuelTotal),Froude(fuelTotal), &
-moistspec(fuelTotal),dragco(fuelTotal),ssspec(fuelTotal),compact(fuelTotal))
+specTotal=infuel+ntspecies*tfuelbins
+allocate(fuelSA(specTotal),leafdropfreq(specTotal),decay(specTotal), &
+droptime(specTotal),vterminal(specTotal),Froude(specTotal), &
+moistspec(specTotal),dragco(specTotal),ssspec(specTotal),compact(specTotal))
 
 ! Species data
 if (iFIA.eq.1) then
@@ -402,7 +409,7 @@ if (iFIA.eq.1) then
     print*,'USING SPECIES GROUPS... check below to make sure you have inputted groups'
     print*,'FIA = ',FIA
     print*,'!----!----!----!----!----!----!----!----!----!----!----!----!----!----!'
-    do ift=1,ntspecies*tfuelbins
+    do ift=1,specTotal
       do s=1,10
         if(s.eq.FIA(ift)) then
           fuelSA(ift)=SPECgroups(s)%surfarea
@@ -425,7 +432,7 @@ if (iFIA.eq.1) then
     print*,'USING SPECIFIC SPECIES CODES... check below to make sure you have inputted species'
     print*,'FIA = ',FIA
     print*,'!----!----!----!----!----!----!----!----!----!----!----!----!----!----!'
-    do ift=1,ntspecies*tfuelbins
+    do ift=1,specTotal
       do s=1,290
         loc=0
         if(SPECINFO(s)%FIA_code.eq.FIA(ift)) then
@@ -457,7 +464,7 @@ elseif (iFIA.eq.0) then
     dragslope = 1.4/(sqrt(70.0) - 1.0)
     dragb = 0.6 - dragslope
   open (99,file=speciesfile)
-  do ift=1,ntspecies*tfuelbins
+  do ift=1,specTotal
     read(99,*) fuelMass,fuelSA(ift),leafdropfreq(ift),decay(ift),droptime(ift)
     fuelMass=fuelMass/1000.
     fuelSA(ift)=fuelSA(ift)/10000.
@@ -486,13 +493,13 @@ droptime = ceiling(droptime/(12/StepsPerYear))
 !print*,'moistspec = ',moistspec
 !print*,'ssspec = ',ssspec
 
-allocate(lrhofT(fuelTotal,nx,ny,periodTotal)); lrhofT(:,:,:,:)=0.0
-allocate(grhofT(fuelTotal,nx,ny,periodTotal)); grhofT(:,:,:,:)=0.0
-allocate(lafdT(fuelTotal,nx,ny,periodTotal)); lafdT(:,:,:,:)=0.0
-allocate(gafdT(fuelTotal,nx,ny,periodTotal)); gafdT(:,:,:,:)=0.0
-allocate(lmoistT(fuelTotal,nx,ny,periodTotal)); lmoistT(:,:,:,:)=0.0
-allocate(gmoistT(fuelTotal,nx,ny,periodTotal)); gmoistT(:,:,:,:)=0.0
-allocate(lssT(fuelTotal,nx,ny,periodTotal)); lssT(:,:,:,:)=0.0
-allocate(gssT(fuelTotal,nx,ny,periodTotal)); gssT(:,:,:,:)=0.0
+allocate(lrhofT(specTotal,nx,ny,periodTotal)); lrhofT(:,:,:,:)=0.0
+allocate(grhofT(specTotal,nx,ny,periodTotal)); grhofT(:,:,:,:)=0.0
+allocate(lafdT(specTotal,nx,ny,periodTotal)); lafdT(:,:,:,:)=0.0
+allocate(gafdT(specTotal,nx,ny,periodTotal)); gafdT(:,:,:,:)=0.0
+allocate(lmoistT(specTotal,nx,ny,periodTotal)); lmoistT(:,:,:,:)=0.0
+allocate(gmoistT(specTotal,nx,ny,periodTotal)); gmoistT(:,:,:,:)=0.0
+allocate(lssT(specTotal,nx,ny,periodTotal)); lssT(:,:,:,:)=0.0
+allocate(gssT(specTotal,nx,ny,periodTotal)); gssT(:,:,:,:)=0.0
 
 end subroutine define_duet_variables

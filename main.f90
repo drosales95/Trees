@@ -2,7 +2,7 @@
 ! program to populate a grid with an established fuel map
 !
 ! Author: Alexander Josephson (11/19)
-! Last Modified: 3/22
+! Last Modified: 4/23
 !ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 ! © 2022. Triad National Security, LLC. All rights reserved.  This
 ! program was produced under U.S. Government contract 89233218CNA000001
@@ -23,8 +23,12 @@ use io_variables
 use infile_variables
 use treatment_variables
 use species_variables
+use baseline_variables, only : ilitter,command
 
 implicit none
+
+! Local Variables
+logical :: DUETexists
 
 ! Executable Code
 print *,'===================================='
@@ -36,7 +40,6 @@ print *,'===================================='
 call namelist_input
 call define_constant_variables
 call define_grid_variables
-call define_species_variables
 
 !-----Fuel Read-in
 if(ifuelin.eq.1) call grid_readin
@@ -55,4 +58,15 @@ else
   call output_nfuel
 endif
 
+!-----Check for and run DUET
+if(ilitter.eq.2) then
+  inquire(file='DUET', exist=DUETexists)
+  if (DUETexists) then
+    print *, "Found DUET"
+    call system(command)
+  else
+    print *, "DUET is not included in this release of Trees! Please use ilitter=1 or 0. See README"
+  endif
+endif
+  
 end

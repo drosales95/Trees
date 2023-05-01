@@ -79,7 +79,7 @@ module baseline_variables
 implicit none
 
 integer:: igrass=0,itrees=0,ilitter=0
-integer:: ngrass=1
+integer:: ngrass=1,duet_ngrass=1
 real:: grassconstant=5.,litterconstant=5.,gmoistoverride=0.
 real,allocatable:: grhof(:,:,:,:),gsizescale(:,:,:,:),gmoist(:,:,:,:),gfueldepth(:,:,:)
 real,allocatable:: trhof(:,:,:,:),tsizescale(:,:,:,:),tmoist(:,:,:,:),tfueldepth(:,:,:)
@@ -96,6 +96,8 @@ integer,allocatable:: ntrees(:),tspecies(:)
 real,allocatable:: gdepth(:),grho(:),gss(:),gmoisture(:)
 real,allocatable:: ldepth(:),lrho(:),lss(:),lmoisture(:)
 integer,allocatable:: tdnx(:),tdny(:)
+
+character :: command*50
 
 end module baseline_variables
 
@@ -126,7 +128,7 @@ implicit none
 character :: speciesfile*100,winddatafile*100
 integer :: windprofile=0,randomwinds=0
 integer :: grassstep=1,periodTotal,litout
-integer :: StepsPerYear=1,YearsSinceBurn=4
+integer :: StepsPerYear=1,YearsSinceBurn=4,inputprogram=1
 real :: relhum
 real,allocatable:: vterminal(:),fuelSA(:),Froude(:),droptime(:)
 real,allocatable:: leafdropfreq(:),decay(:),dragco(:),moistspec(:)
@@ -171,6 +173,7 @@ type(read_species),dimension(290) :: SPECINFO
 type(read_species_grp),dimension(10) :: SPECgroups
 integer :: iFIA,iFIAspecies
 integer,allocatable :: FIA(:)
+integer,allocatable :: final_uni_sp(:)
 
 end module species_variables
 
